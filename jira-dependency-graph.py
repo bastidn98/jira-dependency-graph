@@ -177,6 +177,7 @@ def build_graph_data(start_issue_key, jira, excludes, ignores, show_directions, 
             log('Skipping ' + issue_key + ' - not traversing to a different project')
             return graph
 
+        log('\nAAAAAAdding ' + issue_key)
         graph.append(create_node_text(issue_key, fields, islink=False))
 
         if not ignore_subtasks:
@@ -184,6 +185,9 @@ def build_graph_data(start_issue_key, jira, excludes, ignores, show_directions, 
                 issues = jira.query('"Epic Link" = "%s"' % issue_key)
                 for subtask in issues:
                     subtask_key = get_key(subtask)
+                    if ignore_closed and (subtask['fields']['status']['name'] in ('Closed', 'Done', 'Abandoned')):
+                        log('Skipping ' + subtask_key + ' - it is Closed')
+                        continue
                     log(subtask_key + ' => references epic => ' + issue_key)
                     node = '{}->{}[color=orange]'.format(
                         create_node_text(issue_key, fields),
