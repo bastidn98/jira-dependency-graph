@@ -15,6 +15,7 @@ Requirements:
 =============
 * Python 2.7+ or Python 3+
 * [requests](http://docs.python-requests.org/en/master/)
+* Graphviz
 
 Or
 * [docker](https://docs.docker.com/install/)

@@ -4,11 +4,16 @@ from __future__ import print_function
 
 import argparse
 import getpass
+import os
 import sys
 import textwrap
 
 import requests
 from functools import reduce
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 GOOGLE_CHART_URL = 'https://chart.apis.google.com/chart'
 MAX_SUMMARY_LENGTH = 30
@@ -122,10 +127,10 @@ def build_graph_data(start_issue_key, jira, excludes, ignores, show_directions, 
         link_type = link['type'][direction]
 
         if ignore_closed:
-            if ('inwardIssue' in link) and (link['inwardIssue']['fields']['status']['name'] in 'Closed'):
+            if ('inwardIssue' in link) and (link['inwardIssue']['fields']['status']['name'] in ('Closed', 'Done', 'Abandoned')):
                 log('Skipping ' + linked_issue_key + ' - linked key is Closed')
                 return
-            if ('outwardIssue' in link) and (link['outwardIssue']['fields']['status']['name'] in 'Closed'):
+            if ('outwardIssue' in link) and (link['outwardIssue']['fields']['status']['name'] in ('Closed', 'Done', 'Abandoned')):
                 log('Skipping ' + linked_issue_key + ' - linked key is Closed')
                 return
 
@@ -164,7 +169,7 @@ def build_graph_data(start_issue_key, jira, excludes, ignores, show_directions, 
         fields = issue['fields']
         seen.append(issue_key)
 
-        if ignore_closed and (fields['status']['name'] in 'Closed'):
+        if ignore_closed and (fields['status']['name'] in ('Closed', 'Done', 'Abandoned')):
             log('Skipping ' + issue_key + ' - it is Closed')
             return graph
 
@@ -273,6 +278,12 @@ def filter_duplicates(lst):
 
 def main():
     options = parse_args()
+    if (_user:= os.getenv('USERNAME', None)):
+        options.user = _user
+    if (_password:= os.getenv('TOKEN', None)):
+        options.password = _password
+    if (_url:= os.getenv('URL', None)):
+        options.jira_url = _url
 
     if options.bearer is not None:
         # Generate JIRA Personal Access Token and use --bearer=ABCDEF012345 commandline argument
